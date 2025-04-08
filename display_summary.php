@@ -98,7 +98,7 @@ $summary = array_fill(1, 31, [
                 }
     
                 // Categorizing patients
-                if (stripos($category, 'formal-government') !== false || stripos($category, 'sponsored- local govt unit') !== false) {
+                if (stripos($category, 'formal-government') !== false) {
                     $summary[$day]['govt'] += 1;
                 } elseif (stripos($category, 'formal-private') !== false) {
                     $summary[$day]['private'] += 1;
@@ -114,7 +114,7 @@ $summary = array_fill(1, 31, [
                 } elseif (stripos($category, 'pwd') !== false) {
                     $summary[$day]['pwd'] += 1;
                 } elseif (stripos($category, 'indigent') !== false || stripos($category, 'sponsored- pos financially incapable') !== false
-                    || stripos($category, '4ps/mcct') !== false) {
+                    || stripos($category, '4ps/mcct') !== false || stripos($category, 'sponsored- local govt unit') !== false) {
                     $summary[$day]['indigent'] += 1;
                 } elseif (stripos($category, 'lifetime member') !== false) {
                     $summary[$day]['pensioners'] += 1;
@@ -316,7 +316,7 @@ $summary = array_fill(1, 31, [
                         <th colspan="5" style="background-color: yellow;">Individual Paying</th>
                         <th rowspan="2" style="background-color: yellow;">Indigent</th>
                         <th rowspan="2" style="background-color: yellow;">Pensioners</th>
-                        <th colspan="2" style="background-color: #c7f9ff;"> NHIP / NON-NHIP</th>
+                        <th colspan="2" style="background-color: #2c67f2;"> NHIP / NON-NHIP</th>
                         <th rowspan="2" style="background-color: yellow;">Total Admissions</th>
                         <th colspan="2" style="background-color: yellow;">Total Discharges</th>
                         <th colspan="2" style="background-color: yellow;">Accumulated Patients LOHS</th>
@@ -325,9 +325,9 @@ $summary = array_fill(1, 31, [
                         <th style="background-color: green; color: white;">Gov’t</th><th style="background-color: green; color: white;">Private</th>
                         <th style="background-color: green; color: white;">Self-Employed</th><th style="background-color: green; color: white;">OFW</th>
                         <th style="background-color: green; color: white;">OWWA</th><th style="background-color: green; color: white;">SC</th><th style="background-color: green; color: white;">PWD</th>
-                        <th style="background-color:rgb(0, 0, 0); color: white;" id="th1">NHIP</th><th style="background-color: #c7f9ff;">NON-NHIP</th>
+                        <th style="background-color: #2c67f2;" id="th1">NHIP</th><th style="background-color: #2c67f2;">NON-NHIP</th>
                         <th style="background-color: orange;">NHIP</th><th style="background-color: orange;">NON-NHIP</th>
-                        <th style="background-color: blue;">NHIP</th><th style="background-color: blue;">NON-NHIP</th>
+                        <th style="background-color: #2c67f2;">NHIP</th><th style="background-color: #2c67f2;">NON-NHIP</th>
                     </tr>
                 </thead>
                 <tbody>

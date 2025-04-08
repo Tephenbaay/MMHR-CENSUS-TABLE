@@ -59,7 +59,7 @@ if (isset($_FILES['excelFile'])) {
             $colICD10 = "P"; 
             $tableName = "patient_records";
         } elseif (stripos($sheetName, 'admission') !== false) {
-            $startRow = 11;
+            $startRow = 9;
             $colPatientName = "D"; 
             $colAdmissionDate = "H"; 
             $colMemberCategory = "K";
