@@ -8,34 +8,46 @@ $conn = new mysqli($host, $user, $pass, $dbname);
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
-#query for handling the patient_records table
-$sheets_query = "SELECT DISTINCT sheet_name FROM patient_records";
-$sheets_result = $conn->query($sheets_query);
+
+// Get all uploaded files
+$files_query = "SELECT id, file_name FROM uploaded_files ORDER BY upload_date DESC";
+$files_result = $conn->query($files_query);
+$files = [];
+while ($row = $files_result->fetch_assoc()) {
+    $files[] = $row;
+}
+$selected_file_id = isset($_GET['file_id']) ? intval($_GET['file_id']) : 0;
+
 $sheets = [];
-while ($row = $sheets_result->fetch_assoc()) {
-    $sheets[] = $row['sheet_name'];
+if ($selected_file_id) {
+    $sheets_query = "SELECT DISTINCT sheet_name FROM patient_records WHERE file_id = $selected_file_id";
+    $sheets_result = $conn->query($sheets_query);
+    while ($row = $sheets_result->fetch_assoc()) {
+        $sheets[] = $row['sheet_name'];
+    }
+
+    $sheets_query_2 = "SELECT DISTINCT sheet_name_2 FROM patient_records_2 WHERE file_id = $selected_file_id";
+    $sheets_result_2 = $conn->query($sheets_query_2);
+    $sheets_2 = [];
+    while ($row = $sheets_result_2->fetch_assoc()) {
+        $sheets_2[] = $row['sheet_name_2'];
+    }
+
+    $sheets_query_3 = "SELECT DISTINCT sheet_name_3 FROM patient_records_3 WHERE file_id = $selected_file_id";
+    $sheets_result_3 = $conn->query($sheets_query_3);
+    $sheets_3 = [];
+    while ($row = $sheets_result_3->fetch_assoc()) {
+        $sheets_3[] = $row['sheet_name_3'];
+    }
 }
-#query for handling the patient_records_2 table
-$sheets_query_2 = "SELECT DISTINCT sheet_name_2 FROM patient_records_2";
-$sheets_result_2 = $conn->query($sheets_query_2);
-$sheets_2 = [];
-while ($row = $sheets_result_2->fetch_assoc()) {
-    $sheets_2[] = $row['sheet_name_2'];
-}
-#query for handling the patient_records_3 table
-$sheets_query_3 = "SELECT DISTINCT sheet_name_3 FROM patient_records_3";
-$sheets_result_3 = $conn->query($sheets_query_3);
-$sheets_3 = [];
-while ($row = $sheets_result_3->fetch_assoc()) {
-    $sheets_3[] = $row['sheet_name_3'];
-}
+
 
 $selected_sheet_1 = isset($_GET['sheet_1']) ? $_GET['sheet_1'] : '';
 $selected_sheet_2 = isset($_GET['sheet_2']) ? $_GET['sheet_2'] : '';
 $selected_sheet_3 = isset($_GET['sheet_3']) ? $_GET['sheet_3'] : '';
 
 $query = "SELECT admission_date, discharge_date, member_category FROM patient_records 
-          WHERE (sheet_name) = ('$selected_sheet_1')";
+          WHERE sheet_name = '$selected_sheet_1' AND file_id = $selected_file_id";
 
 $result = $conn->query($query);
 
@@ -98,7 +110,7 @@ $summary = array_fill(1, 31, [
                 }
     
                 // Categorizing patients
-                if (stripos($category, 'formal-government') !== false) {
+                if (stripos($category, 'formal-government') !== false || stripos($category, 'sponsored- local govt unit') !== false) {
                     $summary[$day]['govt'] += 1;
                 } elseif (stripos($category, 'formal-private') !== false) {
                     $summary[$day]['private'] += 1;
@@ -114,7 +126,7 @@ $summary = array_fill(1, 31, [
                 } elseif (stripos($category, 'pwd') !== false) {
                     $summary[$day]['pwd'] += 1;
                 } elseif (stripos($category, 'indigent') !== false || stripos($category, 'sponsored- pos financially incapable') !== false
-                    || stripos($category, '4ps/mcct') !== false || stripos($category, 'sponsored- local govt unit') !== false) {
+                    || stripos($category, '4ps/mcct') !== false) {
                     $summary[$day]['indigent'] += 1;
                 } elseif (stripos($category, 'lifetime member') !== false) {
                     $summary[$day]['pensioners'] += 1;
@@ -140,7 +152,9 @@ $summary = array_fill(1, 31, [
     }  
 
     # non-nhip column
-    $non_nhip_query = "SELECT date_admitted, date_discharge, category, sheet_name_3 FROM patient_records_3 WHERE sheet_name_3 = '$selected_sheet_3'";
+    $non_nhip_query = "SELECT date_admitted, date_discharge, category, sheet_name_3 
+                   FROM patient_records_3 
+                   WHERE sheet_name_3 = '$selected_sheet_3' AND file_id = $selected_file_id";
     $non_nhip_result = $conn->query($non_nhip_query);
 
     while ($row = $non_nhip_result->fetch_assoc()) {
@@ -148,7 +162,7 @@ $summary = array_fill(1, 31, [
         $discharge = new DateTime($row['date_discharge']);
         $category = strtolower($row['category']);
 
-        if (!(stripos($category, 'n/a') !== false || stripos($category, '#n/a') !== false)) {
+        if (!(stripos($category, 'n/a') !== false)) {
             continue;
         }
 
@@ -180,7 +194,8 @@ $summary = array_fill(1, 31, [
     }
 
     #total admission column
-    $admission_query = "SELECT admission_date_2 FROM patient_records_2 WHERE sheet_name_2 = '$selected_sheet_2'";
+    $admission_query = "SELECT admission_date_2 FROM patient_records_2 
+                    WHERE sheet_name_2 = '$selected_sheet_2' AND file_id = $selected_file_id";
     $admission_result = $conn->query($admission_query);
 
     while ($row = $admission_result->fetch_assoc()) {
@@ -190,7 +205,8 @@ $summary = array_fill(1, 31, [
             $summary[$admit_day]['total_admissions'] += 1;
         }
     }
-    $discharge_query = "SELECT date_discharge, category FROM patient_records_3 WHERE sheet_name_3 = '$selected_sheet_3'";
+    $discharge_query = "SELECT date_discharge, category FROM patient_records_3 
+                    WHERE sheet_name_3 = '$selected_sheet_3' AND file_id = $selected_file_id";
     $discharge_result = $conn->query($discharge_query);
 
     while ($row = $discharge_result->fetch_assoc()) {
@@ -219,6 +235,7 @@ $summary = array_fill(1, 31, [
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MMHR Census</title>
+    <link rel="icon" href="sige/download-removebg-preview.png" type="image/png">
     <link rel="stylesheet" href="sige\summary.css">
 </head>
 <body class="container mt-4">
@@ -264,10 +281,20 @@ $summary = array_fill(1, 31, [
             <input type="hidden" name="sheet_3" value="<?php echo $selected_sheet_3; ?>">
         </form>
     
-        <form method="GET" class="mb-3">
+        <form method="GET" class="mb-3" id="filterForm">
             <div class="sige">
+            <label for="file_id">Select File:</label>
+            <select name="file_id" id="file_id" onchange="document.getElementById('filterForm').submit()">
+                <option value="">-- Choose File --</option>
+                <?php foreach ($files as $file): ?>
+                    <option value="<?= $file['id'] ?>" <?= $selected_file_id == $file['id'] ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($file['file_name']) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+            <?php if ($selected_file_id): ?>
             <label class="col2-5"></label>
-            <select name="sheet_1" onchange="this.form.submit()" class="form-select mb-2">
+            <select name="sheet_1" onchange="document.getElementById('filterForm').submit()" class="form-select mb-2">
             <option value="" disabled selected>Select Month</option>
                 <?php foreach ($sheets as $sheet) { ?>
                     <option value="<?php echo $sheet; ?>" <?php echo $sheet === $selected_sheet_1 ? 'selected' : ''; ?>>
@@ -275,24 +302,26 @@ $summary = array_fill(1, 31, [
                     </option>
                 <?php } ?>
             </select>
+
             <label class="col7"></label>
-            <select name="sheet_2" onchange="this.form.submit()" class="form-select mb-2">
+            <select name="sheet_2" onchange="document.getElementById('filterForm').submit()" class="form-select mb-2">
             <option value="" disabled selected>Select Admission Sheet</option>
                 <?php foreach ($sheets_2 as $sheet) { ?>
-                    <option value="<?php echo $sheet; ?>" <?php echo $sheet === $selected_sheet_2 ? 'selected' : ''; ?>>
+                    <option value="<?php echo $sheet; ?>" 
+                        <?php echo $sheet === $selected_sheet_2 ? 'selected' : ''; ?>>
                         <?php echo $sheet; ?>
                     </option>
                 <?php } ?>
             </select>
+
             <label class="col8"></label>
-            <select name="sheet_3" onchange="this.form.submit()" class="form-select mb-2">
+            <select name="sheet_3" onchange="document.getElementById('filterForm').submit()" class="form-select mb-2">
             <option value="" disabled selected>Select Discharge Sheet</option>
-                <?php foreach ($sheets_3 as $sheet) { ?>
-                    <option value="<?php echo $sheet; ?>" <?php echo $sheet === $selected_sheet_3 ? 'selected' : ''; ?>>
-                        <?php echo $sheet; ?>
-                    </option>
-                <?php } ?>
+            <?php foreach ($sheets_3 as $sheet): ?>
+                <option value="<?= $sheet ?>" <?= $sheet == $selected_sheet_3 ? 'selected' : '' ?>><?= $sheet ?></option>
+            <?php endforeach; ?>
             </select>
+            <?php endif; ?>
             </div>
         </form>
                 
@@ -316,7 +345,7 @@ $summary = array_fill(1, 31, [
                         <th colspan="5" style="background-color: yellow;">Individual Paying</th>
                         <th rowspan="2" style="background-color: yellow;">Indigent</th>
                         <th rowspan="2" style="background-color: yellow;">Pensioners</th>
-                        <th colspan="2" style="background-color: #2c67f2;"> NHIP / NON-NHIP</th>
+                        <th colspan="2" style="background-color: #c7f9ff;"> NHIP / NON-NHIP</th>
                         <th rowspan="2" style="background-color: yellow;">Total Admissions</th>
                         <th colspan="2" style="background-color: yellow;">Total Discharges</th>
                         <th colspan="2" style="background-color: yellow;">Accumulated Patients LOHS</th>
@@ -325,9 +354,9 @@ $summary = array_fill(1, 31, [
                         <th style="background-color: green; color: white;">Gov’t</th><th style="background-color: green; color: white;">Private</th>
                         <th style="background-color: green; color: white;">Self-Employed</th><th style="background-color: green; color: white;">OFW</th>
                         <th style="background-color: green; color: white;">OWWA</th><th style="background-color: green; color: white;">SC</th><th style="background-color: green; color: white;">PWD</th>
-                        <th style="background-color: #2c67f2;" id="th1">NHIP</th><th style="background-color: #2c67f2;">NON-NHIP</th>
+                        <th style="background-color:rgb(0, 0, 0); color: white;" id="th1">NHIP</th><th style="background-color: #c7f9ff;">NON-NHIP</th>
                         <th style="background-color: orange;">NHIP</th><th style="background-color: orange;">NON-NHIP</th>
-                        <th style="background-color: #2c67f2;">NHIP</th><th style="background-color: #2c67f2;">NON-NHIP</th>
+                        <th style="background-color: blue;">NHIP</th><th style="background-color: blue;">NON-NHIP</th>
                     </tr>
                 </thead>
                 <tbody>
