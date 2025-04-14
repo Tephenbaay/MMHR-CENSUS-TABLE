@@ -9,33 +9,44 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-$sheets_query = "SELECT DISTINCT sheet_name FROM patient_records";
-$sheets_result = $conn->query($sheets_query);
+$files_query = "SELECT id, file_name FROM uploaded_files ORDER BY upload_date DESC";
+$files_result = $conn->query($files_query);
+$files = [];
+while ($row = $files_result->fetch_assoc()) {
+    $files[] = $row;
+}
+$selected_file_id = isset($_GET['file_id']) ? intval($_GET['file_id']) : 0;
+
 $sheets = [];
-while ($row = $sheets_result->fetch_assoc()) {
-    $sheets[] = $row['sheet_name'];
+if ($selected_file_id) {
+    $sheets_query = "SELECT DISTINCT sheet_name FROM patient_records WHERE file_id = $selected_file_id";
+    $sheets_result = $conn->query($sheets_query);
+    while ($row = $sheets_result->fetch_assoc()) {
+        $sheets[] = $row['sheet_name'];
+    }
+
+    $sheets_query_2 = "SELECT DISTINCT sheet_name_2 FROM patient_records_2 WHERE file_id = $selected_file_id";
+    $sheets_result_2 = $conn->query($sheets_query_2);
+    $sheets_2 = [];
+    while ($row = $sheets_result_2->fetch_assoc()) {
+        $sheets_2[] = $row['sheet_name_2'];
+    }
+
+    $sheets_query_3 = "SELECT DISTINCT sheet_name_3 FROM patient_records_3 WHERE file_id = $selected_file_id";
+    $sheets_result_3 = $conn->query($sheets_query_3);
+    $sheets_3 = [];
+    while ($row = $sheets_result_3->fetch_assoc()) {
+        $sheets_3[] = $row['sheet_name_3'];
+    }
 }
 
-$sheets_query_2 = "SELECT DISTINCT sheet_name_2 FROM patient_records_2";
-$sheets_result_2 = $conn->query($sheets_query_2);
-$sheets_2 = [];
-while ($row = $sheets_result_2->fetch_assoc()) {
-    $sheets_2[] = $row['sheet_name_2'];
-}
-
-$sheets_query_3 = "SELECT DISTINCT sheet_name_3 FROM patient_records_3";
-$sheets_result_3 = $conn->query($sheets_query_3);
-$sheets_3 = [];
-while ($row = $sheets_result_3->fetch_assoc()) {
-    $sheets_3[] = $row['sheet_name_3'];
-}
 
 $selected_sheet_1 = isset($_GET['sheet_1']) ? $_GET['sheet_1'] : '';
 $selected_sheet_2 = isset($_GET['sheet_2']) ? $_GET['sheet_2'] : '';
 $selected_sheet_3 = isset($_GET['sheet_3']) ? $_GET['sheet_3'] : '';
 
 $query = "SELECT admission_date, discharge_date, member_category FROM patient_records 
-          WHERE LOWER(sheet_name) = LOWER('$selected_sheet_1')";
+          WHERE sheet_name = '$selected_sheet_1' AND file_id = $selected_file_id";
 
 $result = $conn->query($query);
 
@@ -46,40 +57,80 @@ $summary = array_fill(1, 31, [
     'total_discharges_non_nhip' => 0,'lohs_nhip' => 0, 'lohs_non_nhip' => 0
 ]);
 
-while ($row = $result->fetch_assoc()) {
-    $admit = new DateTime($row['admission_date']);
-    $discharge = new DateTime($row['discharge_date']);
-    $category = strtolower($row['member_category']);
+    #column 1-5
+    while ($row = $result->fetch_assoc()) {
+        $admit = DateTime::createFromFormat('Y-m-d', trim($row['admission_date']))->setTime(0, 0, 0);
+        $discharge = DateTime::createFromFormat('Y-m-d', trim($row['discharge_date']))->setTime(0, 0, 0);
+        $category = trim(strtolower($row['member_category']));
+    
+        $selected_year = 2025;
+        $month_numbers = [
+            'JANUARY' => 1, 'FEBRUARY' => 2, 'MARCH' => 3, 'APRIL' => 4, 'MAY' => 5, 'JUNE' => 6,
+            'JULY' => 7, 'AUGUST' => 8, 'SEPTEMBER' => 9, 'OCTOBER' => 10, 'NOVEMBER' => 11, 'DECEMBER' => 12
+        ];
 
-    $startDay = max(1, ($admit->format('m') == '12') ? 1 : (int) $admit->format('d'));
-    $endDay = min(31, (int) $discharge->format('d') - 1);
+        if ($admit == $discharge) {
+            continue;
+        }
+    
+        $selected_month_name = strtoupper($selected_sheet_1);
+    
+        if (!isset($month_numbers[$selected_month_name])) {
+            continue; 
+        }
+    
+        $selected_month = $month_numbers[$selected_month_name];
+    
+        $first_day_of_month = new DateTime("$selected_year-$selected_month-01 00:00:00");
+        $last_day_of_month = new DateTime("$selected_year-$selected_month-" . cal_days_in_month(CAL_GREGORIAN, $selected_month, $selected_year));
 
-    if ($startDay <= 31 && $endDay >= 1) {
-        for ($day = $startDay; $day <= $endDay; $day++) {
-            if (strpos($category, 'formal-government') !== false || strpos($category, 'sponsored- local govt unit') !== false) {
-                $summary[$day]['govt'] += 1;
-            } elseif (strpos($category, 'formal-private') !== false) {
-                $summary[$day]['private'] += 1;
-            } elseif (strpos($category, 'self earning individual') !== false || strpos($category, 'indirect contributor') !== false
-              || strpos($category, 'informal economy- informal sector') !== false) {
-                $summary[$day]['self_employed'] += 1;
-            } elseif (strpos($category, 'ofw') !== false) {
-                $summary[$day]['ofw'] += 1;
-            } elseif (strpos($category, 'migrant worker') !== false) {
-                $summary[$day]['owwa'] += 1;
-            } elseif (strpos($category, 'senior citizen') !== false) {
-                $summary[$day]['sc'] += 1;
-            } elseif (strpos($category, 'pwd') !== false) {
-                $summary[$day]['pwd'] += 1;
-            } elseif (strpos($category, 'indigent') !== false || strpos($category, 'sponsored- pos financially incapable') !== false
-              || strpos($category, '4ps/mcct') !== false) {
-                $summary[$day]['indigent'] += 1;
-            } elseif (strpos($category, 'lifetime member') !== false) {
-                $summary[$day]['pensioners'] += 1;
+        if ($discharge->format('d') == 1 && $admit < $first_day_of_month) {
+            continue;
+        }
+
+        $startDay = ($admit < $first_day_of_month) ? 1 : (int)$admit->format('d');
+        $endDay = (int)$discharge->format('d') - 1;
+
+        if ($startDay > $endDay) {
+            continue; 
+        }
+    
+        if ($startDay <= 31 && $endDay >= 1) {
+            for ($day = $startDay; $day <= $endDay; $day++) {
+                if (!isset($summary[$day])) {
+                    $summary[$day] = [
+                        'govt' => 0, 'private' => 0, 'self_employed' => 0, 'ofw' => 0,
+                        'owwa' => 0, 'sc' => 0, 'pwd' => 0, 'indigent' => 0, 'pensioners' => 0
+                    ];
+                }
+    
+                // Categorizing patients
+                if (stripos($category, 'formal-government') !== false || stripos($category, 'sponsored- local govt unit') !== false) {
+                    $summary[$day]['govt'] += 1;
+                } elseif (stripos($category, 'formal-private') !== false) {
+                    $summary[$day]['private'] += 1;
+                } elseif (stripos($category, 'self earning individual') !== false || stripos($category, 'indirect contributor') !== false
+                    || stripos($category, 'informal economy- informal sector') !== false) {
+                    $summary[$day]['self_employed'] += 1;
+                } elseif (stripos($category, 'migrant worker') !== false) {
+                    $summary[$day]['ofw'] += 1;
+                } elseif (stripos($category, 'direct contributor') !== false) {
+                    $summary[$day]['owwa'] += 1;
+                } elseif (stripos($category, 'senior citizen') !== false) {
+                    $summary[$day]['sc'] += 1;
+                } elseif (stripos($category, 'pwd') !== false) {
+                    $summary[$day]['pwd'] += 1;
+                } elseif (stripos($category, 'indigent') !== false || stripos($category, 'sponsored- pos financially incapable') !== false
+                    || stripos($category, '4ps/mcct') !== false) {
+                    $summary[$day]['indigent'] += 1;
+                } elseif (stripos($category, 'lifetime member') !== false) {
+                    $summary[$day]['pensioners'] += 1;
+                }
             }
         }
-    }
-    
+    }    
+
+    #nhip column
     foreach ($summary as $day => $row) {
         $summary[$day]['nhip'] = 
             $row['govt'] + $row['private'] + $row['self_employed'] + 
@@ -87,14 +138,59 @@ while ($row = $result->fetch_assoc()) {
             $row['pwd'] + $row['indigent'] + $row['pensioners'];
     }    
 
+    #column 9 non-nhip
     foreach ($summary as $day => $row) {
         $summary[$day]['lohs_nhip'] = 
             $row['govt'] + $row['private'] + $row['self_employed'] + 
             $row['ofw'] + $row['owwa'] + $row['sc'] + 
             $row['pwd'] + $row['indigent'] + $row['pensioners'];
     }  
-}
-    $admission_query = "SELECT admission_date_2 FROM patient_records_2 WHERE sheet_name_2 = '$selected_sheet_2'";
+
+    # non-nhip column
+    $non_nhip_query = "SELECT date_admitted, date_discharge, category, sheet_name_3 
+                   FROM patient_records_3 
+                   WHERE sheet_name_3 = '$selected_sheet_3' AND file_id = $selected_file_id";
+    $non_nhip_result = $conn->query($non_nhip_query);
+
+    while ($row = $non_nhip_result->fetch_assoc()) {
+        $admit = new DateTime($row['date_admitted']);
+        $discharge = new DateTime($row['date_discharge']);
+        $category = strtolower($row['category']);
+
+        if (!(stripos($category, 'n/a') !== false)) {
+            continue;
+        }
+
+        if ($admit->format('Y-m-d') === $discharge->format('Y-m-d')) {
+            continue;
+        }
+
+        if ((int) $discharge->format('d') === 1) {
+            continue;
+        }
+
+        $selected_month_name = date('F', mktime(0, 0, 0, $selected_month, 1, $selected_year));
+
+        $monthStart = new DateTime("first day of $selected_month_name $selected_year");
+        $monthEnd = new DateTime("last day of $selected_month_name $selected_year");
+
+        $startDay = max(1, (int) $admit->format('d'));
+        if ($admit < $monthStart) {
+            $startDay = 1;
+        }
+
+        $endDay = min((int) $discharge->format('d') - 1, (int) $monthEnd->format('d'));
+
+        if ($startDay <= $endDay) {
+            for ($day = $startDay; $day <= $endDay; $day++) {
+                $summary[$day]['non_nhip'] += 1;
+            }
+        }
+    }
+
+    #total admission column
+    $admission_query = "SELECT admission_date_2 FROM patient_records_2 
+                    WHERE sheet_name_2 = '$selected_sheet_2' AND file_id = $selected_file_id";
     $admission_result = $conn->query($admission_query);
 
     while ($row = $admission_result->fetch_assoc()) {
@@ -105,7 +201,8 @@ while ($row = $result->fetch_assoc()) {
         }
     }
 
-    $discharge_query = "SELECT date_discharge, category FROM patient_records_3 WHERE sheet_name_3 = '$selected_sheet_3'";
+    $discharge_query = "SELECT date_discharge, category FROM patient_records_3 
+                    WHERE sheet_name_3 = '$selected_sheet_3' AND file_id = $selected_file_id";
     $discharge_result = $conn->query($discharge_query);
 
     while ($row = $discharge_result->fetch_assoc()) {
@@ -126,25 +223,6 @@ while ($row = $result->fetch_assoc()) {
             }
         }
     }
-
-    $non_nhip_query = "SELECT date_admitted, date_discharge, category FROM patient_records_3 WHERE sheet_name_3 = '$selected_sheet_3'";
-    $non_nhip_result = $conn->query($non_nhip_query);
-    while ($row = $non_nhip_result->fetch_assoc()) {
-        $admit = new DateTime($row['date_admitted']);
-        $discharge = new DateTime($row['date_discharge']);
-        $category = strtolower($row['category']);
-
-        if (strpos($category, 'n/a') !== false || strpos($category, 'non phic') !== false || strpos($category, '#n/a') !== false) {
-            $startDay = max(1, (int) $admit->format('d'));
-            $endDay = min(31, (int) $discharge->format('d') - 1);
-
-            if ($startDay <= 31 && $endDay >= 1) {
-                for ($day = $startDay; $day <= $endDay; $day++) {
-                    $summary[$day]['non_nhip'] += 1;
-                }
-            }
-        }
-    }
 ?>
 
 <html lang="en">
@@ -154,8 +232,6 @@ while ($row = $result->fetch_assoc()) {
     <title>MMHR Census</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="sige\mmhr.css">
-    <style>
-    </style>
 </head>
 <body class="container mt-4">
 
@@ -182,7 +258,7 @@ while ($row = $result->fetch_assoc()) {
             <button type="button" onclick="printTable()" class="btn btn-success ">Print Table</button>
         </form>
         <form action="display_summary.php" method="GET">
-            <button type="submit" class="btn btn-primary btn-2" style="background-color: ">View MMHR</button>
+            <button type="submit" class="btn btn-primary btn-2">View MMHR</button>
         </form>
         <form action="leading_causes.php" method="GET">
             <button type="submit" class="btn btn-primary btn-3">View Leading Causes</button>
@@ -256,39 +332,51 @@ while ($row = $result->fetch_assoc()) {
                     </div>
                 </div>
             </form>
-            <form method="GET" class="mb-3">
-                <div class="sige">
-                <label class="col2-5"></label>
-                    <select name="sheet_1" onchange="this.form.submit()" class="form-select mb-2">
-                    <option value="" disabled selected>Select Month</option>
-                        <?php foreach ($sheets as $sheet) { ?>
-                            <option value="<?php echo $sheet; ?>" <?php echo $sheet === $selected_sheet_1 ? 'selected' : ''; ?>>
-                                <?php echo $sheet; ?>
-                            </option>
-                        <?php } ?>
-                    </select>
-                    <label class="col7"></label>
-                    <select name="sheet_2" onchange="this.form.submit()" class="form-select mb-2">
-                    <option value="" disabled selected>Select Admission Sheet</option>
-                        <?php foreach ($sheets_2 as $sheet) { ?>
-                            <option value="<?php echo $sheet; ?>" <?php echo $sheet === $selected_sheet_2 ? 'selected' : ''; ?>>
-                                <?php echo $sheet; ?>
-                            </option>
-                        <?php } ?>
-                    </select>
-                    <label class="col8"></label>
-                    <select name="sheet_3" onchange="this.form.submit()" class="form-select mb-2">
-                    <option value="" disabled selected>Select Discharge Sheet</option>
-                        <?php foreach ($sheets_3 as $sheet) { ?>
-                            <option value="<?php echo $sheet; ?>" <?php echo $sheet === $selected_sheet_3 ? 'selected' : ''; ?>>
-                                <?php echo $sheet; ?>
-                            </option>
-                        <?php } ?>
-                    </select>
-                </div>
-            </form>
+            <form method="GET" class="mb-3" id="filterForm">
+            <div class="sige">
+            <label for="file_id">Select File:</label>
+            <select name="file_id" id="file_id" onchange="document.getElementById('filterForm').submit()">
+                <option value="">-- Choose File --</option>
+                <?php foreach ($files as $file): ?>
+                    <option value="<?= $file['id'] ?>" <?= $selected_file_id == $file['id'] ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($file['file_name']) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+            <?php if ($selected_file_id): ?>
+            <label class="col2-5"></label>
+            <select name="sheet_1" onchange="document.getElementById('filterForm').submit()" class="form-select mb-2">
+            <option value="" disabled selected>Select Month</option>
+                <?php foreach ($sheets as $sheet) { ?>
+                    <option value="<?php echo $sheet; ?>" <?php echo $sheet === $selected_sheet_1 ? 'selected' : ''; ?>>
+                        <?php echo $sheet; ?>
+                    </option>
+                <?php } ?>
+            </select>
+
+            <label class="col7"></label>
+            <select name="sheet_2" onchange="document.getElementById('filterForm').submit()" class="form-select mb-2">
+            <option value="" disabled selected>Select Admission Sheet</option>
+                <?php foreach ($sheets_2 as $sheet) { ?>
+                    <option value="<?php echo $sheet; ?>" 
+                        <?php echo $sheet === $selected_sheet_2 ? 'selected' : ''; ?>>
+                        <?php echo $sheet; ?>
+                    </option>
+                <?php } ?>
+            </select>
+
+            <label class="col8"></label>
+            <select name="sheet_3" onchange="document.getElementById('filterForm').submit()" class="form-select mb-2">
+            <option value="" disabled selected>Select Discharge Sheet</option>
+            <?php foreach ($sheets_3 as $sheet): ?>
+                <option value="<?= $sheet ?>" <?= $sheet == $selected_sheet_3 ? 'selected' : '' ?>><?= $sheet ?></option>
+            <?php endforeach; ?>
+            </select>
+            <?php endif; ?>
+            </div>
+        </form>
+                
             <br>
-                <h2 class="text-center">MMHR Census</h2>
                 <div class="table-container">
                     <div class="col-md-6">
                     <p>A. DAILY CENSUS OF NHIP PATIENTS</p>
@@ -335,8 +423,47 @@ while ($row = $result->fetch_assoc()) {
                                 </tr>
                             </tbody>
                         </table>
+                        <!-- Quality Assurance Indicator Section -->
+                        <div class="mt-4">
+                            <h4 style="text-align: left;"><strong>B. QUALITY ASSURANCE INDICATOR</strong></h4>
+                            <?php 
+                                $days_in_month_map = [
+                                    'JANUARY' => 31, 'FEBRUARY' => 28, 'MARCH' => 31,
+                                    'APRIL' => 30, 'MAY' => 31, 'JUNE' => 30,
+                                    'JULY' => 31, 'AUGUST' => 31, 'SEPTEMBER' => 30,
+                                    'OCTOBER' => 31, 'NOVEMBER' => 30, 'DECEMBER' => 31
+                                ];
+                                $month_upper = strtoupper($selected_sheet_1 ?? '');
+                                $days_in_month = $days_in_month_map[$month_upper] ?? 30; 
+                                $days_in_thousand = $days_in_month * 100;
+
+                                $total_all = $totals['total'];
+                                $total_nhip = $totals['nhip'];
+
+                                $mbor = $days_in_thousand > 0 ? round(($total_all / $days_in_thousand) * 100, 2) : 0;
+                                $mnhibor = $days_in_thousand > 0 ? round(($total_nhip / $days_in_thousand) * 100, 2) : 0;
+                            ?>
+                             <!-- MBOR -->
+                            <p style="text-align: left;"><b>1. Monthly Bed Occupancy Rate (MBOR) = <u><?= number_format($mbor, 2); ?>%</u></b><p><br>
+                            <div style="text-align: center;"> 
+                                <div>Total of NHIP Census + Total of NON-NHIP CENSUS</div>
+                                <div><?= $totals['total']; ?></div>
+                                <div>MBOR = (------------------------------------------) x 100</div>
+                
+                                <div><?= $days_in_month * 100; ?></div>
+                                <div>Number of days per Month indicated X Number of DOH Authorized Beds</div><br><br>
+                            </div>
+                            <!-- MNHIBOR -->
+                            <p style="text-align: left;"><b>2. Monthly NHIP Beneficiary Occupancy Rate (MNHIBOR) = <u><?= number_format($mnhibor, 2); ?>%</u></b></p><br>
+                            <div style="text-align: center;">
+                                <div>Total of NHIP CENSUS</div>
+                                <div><?= $totals['nhip']; ?></div>
+                                <div>MNHIBOR = (------------------------------------------) x 100</div>
+                                <div><?= $days_in_month * 100; ?></div>
+                                <div>Number of days per Month indicated X Number of PHIC Accredited Beds</div>
+                            </div>
+                        </div>
                     </div>
-            
                     <div class="col-md-6">
                         <p>CENSUS FOR THE DAY=CENSUS OF THE PREVIOUS DAY PLUS THE ADMISSION OF THE DAY</p>
                         <p class="text-center"><b>minus DISCHARGES of the day.</b></p>
@@ -382,10 +509,24 @@ while ($row = $result->fetch_assoc()) {
                                 </tr>
                             </tbody>
                         </table>
-                    </div>
+                        <!-- ASLP Section -->
+                        <?php 
+                            $total_nhip_discharged = $totals_discharge['nhip'];
+                            $aslp = $total_nhip_discharged > 0 ? round($total_nhip / $total_nhip_discharged, 2) : 0;
+                        ?>
+                        <div class="mt-4">
+                            <br><p style="text-align:left;"><b>3. Average Length of Stay per NHIP Patient (ASLP) = <u><?= $totals_discharge['nhip'] > 0 ? number_format($aslp, 2) : 'N/A'; ?></u></b></p><br>
+                            <div style="text-align: center;">
+                                <div>Total No. of NHIP CENSUS</div>
+                                <div><?= $totals['nhip']; ?></div>
+                                <div>ASLP = (------------------------------------------)</div>
+                                <div><?= $totals_discharge['nhip']; ?></div>
+                                <div>Total No. of NHIP Discharges</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            
+            </div>
         </div>
     </div>
 
