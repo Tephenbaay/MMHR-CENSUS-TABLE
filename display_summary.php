@@ -9,7 +9,6 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-// Get all uploaded files
 $files_query = "SELECT id, file_name FROM uploaded_files ORDER BY upload_date DESC";
 $files_result = $conn->query($files_query);
 $files = [];
@@ -69,8 +68,7 @@ $summary = array_fill(1, 31, [
             'JANUARY' => 1, 'FEBRUARY' => 2, 'MARCH' => 3, 'APRIL' => 4, 'MAY' => 5, 'JUNE' => 6,
             'JULY' => 7, 'AUGUST' => 8, 'SEPTEMBER' => 9, 'OCTOBER' => 10, 'NOVEMBER' => 11, 'DECEMBER' => 12
         ];
-    
-        // Skip same-day admission and discharge
+
         if ($admit == $discharge) {
             continue;
         }
@@ -85,19 +83,16 @@ $summary = array_fill(1, 31, [
     
         $first_day_of_month = new DateTime("$selected_year-$selected_month-01 00:00:00");
         $last_day_of_month = new DateTime("$selected_year-$selected_month-" . cal_days_in_month(CAL_GREGORIAN, $selected_month, $selected_year));
-    
-        // Skip patients discharged on the 1st of the month
+
         if ($discharge->format('d') == 1 && $admit < $first_day_of_month) {
             continue;
         }
-    
-        // Determine the counting range
+
         $startDay = ($admit < $first_day_of_month) ? 1 : (int)$admit->format('d');
         $endDay = (int)$discharge->format('d') - 1;
 
-        // Ensure valid range
         if ($startDay > $endDay) {
-            continue; // Skip if invalid range
+            continue; 
         }
     
         if ($startDay <= 31 && $endDay >= 1) {
@@ -205,6 +200,7 @@ $summary = array_fill(1, 31, [
             $summary[$admit_day]['total_admissions'] += 1;
         }
     }
+
     $discharge_query = "SELECT date_discharge, category FROM patient_records_3 
                     WHERE sheet_name_3 = '$selected_sheet_3' AND file_id = $selected_file_id";
     $discharge_result = $conn->query($discharge_query);
@@ -237,6 +233,7 @@ $summary = array_fill(1, 31, [
     <title>MMHR Census</title>
     <link rel="icon" href="sige/download-removebg-preview.png" type="image/png">
     <link rel="stylesheet" href="sige\summary.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body class="container mt-4">
     
@@ -269,8 +266,10 @@ $summary = array_fill(1, 31, [
             <button type="submit" class="btn btn-primary btn-3">View Leading Causes</button>
         </form>
 
+        <button type="button" onclick="exportToExcel()" class="btn btn-success">Export to Excel</button>
     </div>
 </aside>
+
 <button class="toggle-btn" id="toggleBtn">Hide</button>
 
     <div class="table-responsive" id="content">
@@ -326,7 +325,7 @@ $summary = array_fill(1, 31, [
         </form>
                 
         <div class="table-responsive1" id="printable">
-            <table class="table table-bordered">
+            <table class="table table-bordered" id="summaryTable">
                 <thead class="table-dark text-center">
                 <tr class="th1">
                         <th colspan="1" style="background-color: black; color: white;">1</th>
@@ -433,6 +432,84 @@ function printTable() {
     document.body.innerHTML = originalContents;
 
     reinitializeEventListeners();
+}
+
+function exportToExcel() {
+    var table = document.getElementById("summaryTable");
+
+    if (!table) {
+        console.log("Table not found!");
+        return;
+    }
+
+    var ws = XLSX.utils.table_to_sheet(table);
+
+    const range = XLSX.utils.decode_range(ws['!ref']);
+
+    for (let R = range.s.r; R <= range.e.r; ++R) {
+        for (let C = range.s.c; C <= range.e.c; ++C) {
+            const cell_ref = XLSX.utils.encode_cell({ r: R, c: C });
+            const cell = ws[cell_ref];
+            if (!cell) continue;
+
+            if (!cell.s) cell.s = {};
+            cell.s.alignment = { horizontal: "center", vertical: "center" };
+
+            if (R <= 2) {
+                cell.s.font = { bold: true };
+
+                if (R === 0) {
+                    cell.s.fill = { fgColor: { rgb: "000000" } }; 
+                    cell.s.font.color = { rgb: "FFFFFF" }; 
+                } else if (R === 1) {
+                    if (C === 0 || (C >= 10 && C <= 11)) {
+                        cell.s.fill = { fgColor: { rgb: "c7f9ff" } };
+                    } else {
+                        cell.s.fill = { fgColor: { rgb: "FFFF00" } };
+                    }
+                } else if (R === 2) {
+                    if (C >= 0 && C <= 6) {
+                        cell.s.fill = { fgColor: { rgb: "008000" } }; 
+                        cell.s.font.color = { rgb: "FFFFFF" };
+                    } else if (C === 7) {
+                        cell.s.fill = { fgColor: { rgb: "000000" } }; 
+                        cell.s.font.color = { rgb: "FFFFFF" };
+                    } else if (C === 8) {
+                        cell.s.fill = { fgColor: { rgb: "c7f9ff" } };
+                    } else if (C === 9 || C === 10) {
+                        cell.s.fill = { fgColor: { rgb: "FFA500" } }; 
+                    } else if (C === 11 || C === 12) {
+                        cell.s.fill = { fgColor: { rgb: "0000FF" } }; 
+                        cell.s.font.color = { rgb: "FFFFFF" };
+                    }
+                }
+            }
+        }
+    }
+
+    var wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "MMHR Summary");
+
+    var wbout = XLSX.write(wb, {
+        bookType: "xlsx",
+        type: "binary",
+        cellStyles: true 
+    });
+
+    var blob = new Blob([s2ab(wbout)], { type: "application/octet-stream" });
+    var link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "MMHR_Summary.xlsx";
+    link.click();
+}
+
+function s2ab(s) {
+    var buf = new ArrayBuffer(s.length);
+    var view = new Uint8Array(buf);
+    for (var i = 0; i < s.length; i++) {
+        view[i] = s.charCodeAt(i) & 0xff;
+    }
+    return buf;
 }
 
 function reinitializeEventListeners() {
