@@ -277,61 +277,86 @@ $summary = array_fill(1, 31, [
                     <p>For the Month of JANUARY 2025</p>
                 </div>
                 <form class="form1">
-                <div class="row mb-1">
-                    <div class="col-md-6 d-flex align-items-center">
-                        <label class="form-label me-2">Accreditation No.:</label>
-                        <input type="text" class="form-control" name="accreditation_no">
-                    </div>
-                    <div class="col-md-6 d-flex align-items-center">
-                        <label class="form-label me-2">Region:</label>
-                        <input type="text" class="form-control" name="region">
-                    </div>
+    <div class="row">
+        <!-- LEFT SIDE -->
+        <div class="col-md-6 text-start">
+            <div class="form-group row mb-3">
+                <label class="col-sm-5 col-form-label text-end fs-5">Accreditation No. :</label>
+                <div class="col-sm-7">
+                    <input type="text" class="form-control fs-5" name="accreditation_no">
                 </div>
-            
-                <div class="row mb-1">
-                    <div class="col-md-6 d-flex align-items-center">
-                        <label class="form-label me-2">Name of Hospital:</label>
-                        <input type="text" class="form-control" name="hospital_name">
-                    </div>
-                    <div class="col-md-6 d-flex align-items-center">
-                        <label class="form-label me-2">Category:</label>
-                        <input type="text" class="form-control" name="category">
-                    </div>
+            </div>
+
+            <div class="form-group row mb-3">
+                <label class="col-sm-5 col-form-label text-end fs-5">Name of Hospital :</label>
+                <div class="col-sm-7">
+                    <input type="text" class="form-control fs-5" name="hospital_name">
                 </div>
-            
-                <div class="row mb-1">
-                    <div class="col-md-6 d-flex align-items-center">
-                        <label class="form-label me-2">Address No./Street:</label>
-                        <input type="text" class="form-control" name="address">
-                    </div>
-                    <div class="col-md-6 d-flex align-items-center">
-                        <label class="form-label me-2">PHIC Accredited Beds:</label>
-                        <input type="text" class="form-control" name="phic_beds">
-                    </div>
+            </div>
+
+            <div class="form-group row mb-3">
+                <label class="col-sm-5 col-form-label text-end fs-5">Address No./Street :</label>
+                <div class="col-sm-7">
+                    <input type="text" class="form-control fs-5" name="address">
                 </div>
-            
-                <div class="row mb-1">
-                    <div class="col-md-4 d-flex align-items-center">
-                        <label class="form-label me-2">Municipality:</label>
-                        <input type="text" class="form-control" name="municipality">
-                    </div>
-                    <div class="col-md-4 d-flex align-items-center">
-                        <label class="form-label me-2">DOH Authorized Beds:</label>
-                        <input type="text" class="form-control" name="doh_beds">
-                    </div>
-                    <div class="col-md-4 d-flex align-items-center">
-                        <label class="form-label me-2">Province:</label>
-                        <input type="text" class="form-control" name="province">
-                    </div>
+            </div>
+
+            <div class="form-group row mb-3">
+                <label class="col-sm-5 col-form-label text-end fs-5">Municipality :</label>
+                <div class="col-sm-7">
+                    <input type="text" class="form-control fs-5" name="municipality">
                 </div>
-            
-                <div class="row mb-1">
-                    <div class="col-md-4 d-flex align-items-center">
-                        <label class="form-label me-2">Zip Code:</label>
-                        <input type="text" class="form-control" name="zip_code">
-                    </div>
+            </div>
+
+            <div class="form-group row mb-3">
+                <label class="col-sm-5 col-form-label text-end fs-5">Province :</label>
+                <div class="col-sm-7">
+                    <input type="text" class="form-control fs-5" name="province">
                 </div>
-            </form>
+            </div>
+
+            <div class="form-group row mb-3">
+                <label class="col-sm-5 col-form-label text-end fs-5">Zip Code :</label>
+                <div class="col-sm-7">
+                    <input type="text" class="form-control fs-5" name="zip_code">
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT SIDE -->
+        <div class="col-md-6">
+            <div class="form-group row mb-3">
+                <label class="col-sm-5 col-form-label text-end fs-5">Region :</label>
+                <div class="col-sm-7">
+                    <input type="text" class="form-control fs-5" name="region">
+                </div>
+            </div>
+
+            <div class="form-group row mb-3">
+                <label class="col-sm-5 col-form-label text-end fs-5">Category :</label>
+                <div class="col-sm-7">
+                    <input type="text" class="form-control fs-5" name="category">
+                </div>
+            </div>
+
+            <div class="form-group row mb-3">
+                <label class="col-sm-5 col-form-label text-end fs-5">PHIC Accredited Beds :</label>
+                <div class="col-sm-7">
+                    <input type="text" class="form-control fs-5" name="phic_beds">
+                </div>
+            </div>
+
+            <div class="form-group row mb-3">
+                <label class="col-sm-5 col-form-label text-end fs-5">DOH Authorized Beds :</label>
+                <div class="col-sm-7">
+                    <input type="text" class="form-control fs-5" name="doh_beds">
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+
             <form method="GET" class="mb-3" id="filterForm">
             <div class="sige">
             <label for="file_id">Select File:</label>
@@ -447,19 +472,19 @@ $summary = array_fill(1, 31, [
                             <p style="text-align: left;"><b>1. Monthly Bed Occupancy Rate (MBOR) = <u><?= number_format($mbor, 2); ?>%</u></b><p><br>
                             <div style="text-align: center;"> 
                                 <div>Total of NHIP Census + Total of NON-NHIP CENSUS</div>
-                                <div><?= $totals['total']; ?></div>
+                                <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?= $totals['total']; ?></div>
                                 <div>MBOR = (------------------------------------------) x 100</div>
                 
-                                <div><?= $days_in_month * 100; ?></div>
+                                <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?= $days_in_month * 100; ?></div>
                                 <div>Number of days per Month indicated X Number of DOH Authorized Beds</div><br><br>
                             </div>
                             <!-- MNHIBOR -->
                             <p style="text-align: left;"><b>2. Monthly NHIP Beneficiary Occupancy Rate (MNHIBOR) = <u><?= number_format($mnhibor, 2); ?>%</u></b></p><br>
                             <div style="text-align: center;">
-                                <div>Total of NHIP CENSUS</div>
-                                <div><?= $totals['nhip']; ?></div>
+                                <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Total of NHIP CENSUS</div>
+                                <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?= $totals['nhip']; ?></div>
                                 <div>MNHIBOR = (------------------------------------------) x 100</div>
-                                <div><?= $days_in_month * 100; ?></div>
+                                <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?= $days_in_month * 100; ?></div>
                                 <div>Number of days per Month indicated X Number of PHIC Accredited Beds</div>
                             </div>
                         </div>
@@ -517,11 +542,11 @@ $summary = array_fill(1, 31, [
                         <div class="mt-4">
                             <br><p style="text-align:left;"><b>3. Average Length of Stay per NHIP Patient (ASLP) = <u><?= $totals_discharge['nhip'] > 0 ? number_format($aslp, 2) : 'N/A'; ?></u></b></p><br>
                             <div style="text-align: center;">
-                                <div>Total No. of NHIP CENSUS</div>
-                                <div><?= $totals['nhip']; ?></div>
-                                <div>ASLP = (------------------------------------------)</div>
-                                <div><?= $totals_discharge['nhip']; ?></div>
-                                <div>Total No. of NHIP Discharges</div>
+                                <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Total No. of NHIP CENSUS</div>
+                                <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?= $totals['nhip']; ?></div>
+                                <div>ASLP = (------------------------------------------)   </div>
+                                <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?= $totals_discharge['nhip']; ?></div>
+                                <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Total No. of NHIP Discharges</div>
                             </div>
                         </div>
                     </div>
@@ -533,42 +558,71 @@ $summary = array_fill(1, 31, [
 <script>
 
 function printTable() {
-    const printContents = document.getElementById("main-content").innerHTML; 
-    const originalContents = document.body.innerHTML;
+    const mainContent = document.getElementById("main-content");
 
+    // Clone content so original stays intact
+    const printWindow = window.open('', '_blank');
+    
     const printStyles = `
         <style>
             body {
                 font-family: Arial, sans-serif;
-                margin: 0;
+                margin: 20px;
                 padding: 0;
+                color: #000;
+            }
+            h2 {
+                text-align: center;
+                margin-bottom: 20px;
             }
             table {
                 width: 100%;
                 border-collapse: collapse;
+                margin-top: 20px;
             }
             th, td {
                 border: 1px solid black;
                 padding: 8px;
                 text-align: center;
+                font-size: 14px;
             }
             .header-text {
                 text-align: center;
-                margin-bottom: 20px;
+                font-weight: bold;
+            }
+
+            @media print {
+                button, select, input, .no-print {
+                    display: none !important;
+                }
             }
         </style>
     `;
 
-    document.body.innerHTML = `
-        ${printStyles}
-        <div class="header-text">
-            <h2>Mandatory Monthly Hospital Report</h2>
-        </div>
-        ${printContents}
-    `;
+    printWindow.document.write(`
+        <html>
+        <head>
+            <title>Print Table</title>
+            ${printStyles}
+        </head>
+        <body>
+            <div class="header-text">
+                <h2>Mandatory Monthly Hospital Report</h2>
+            </div>
+            ${mainContent.innerHTML}
+        </body>
+        </html>
+    `);
 
-    window.print(); 
-    document.body.innerHTML = originalContents; 
+    printWindow.document.close();
+    printWindow.focus();
+
+    // Wait for styles/content to load before printing
+    printWindow.onload = () => {
+        printWindow.print();
+        printWindow.close();
+    };
+
 
     reinitializeEventListeners();
 }
