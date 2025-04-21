@@ -1,18 +1,32 @@
 <?php
 include 'config.php';
 
-// Get all distinct sheets for dropdown
-$sheet_query = $conn->query("SELECT DISTINCT sheet_name FROM patient_records ORDER BY sheet_name");
-$sheets = [];
-while ($row = $sheet_query->fetch_assoc()) {
-    $sheets[] = $row['sheet_name'];
+// Get list of files
+$files_query = "SELECT id, file_name FROM uploaded_files ORDER BY upload_date DESC";
+$files_result = $conn->query($files_query);
+$files = [];
+while ($row = $files_result->fetch_assoc()) {
+    $files[] = $row;
 }
 
+// Get selected file ID and sheet
+$selected_file_id = isset($_GET['file_id']) ? intval($_GET['file_id']) : 0;
 $selected_sheet = $_GET['sheet'] ?? '';
 
+// Sheets from selected file
+$sheets = [];
+if ($selected_file_id) {
+    $sheets_query = "SELECT DISTINCT sheet_name FROM patient_records WHERE file_id = $selected_file_id";
+    $sheets_result = $conn->query($sheets_query);
+    while ($row = $sheets_result->fetch_assoc()) {
+        $sheets[] = $row['sheet_name'];
+    }
+}
+
+// ICD summary query
 $icd_summary = [];
 
-if ($selected_sheet) {
+if ($selected_file_id && $selected_sheet) {
     $query = "
         SELECT 
             lc.icd_10,
@@ -21,12 +35,12 @@ if ($selected_sheet) {
         FROM leading_causes lc
         JOIN patient_records pr 
             ON lc.patient_name = pr.patient_name AND lc.file_id = pr.file_id
-        WHERE lc.sheet_name = ?
+        WHERE lc.sheet_name = ? AND lc.file_id = ?
         GROUP BY lc.icd_10
         ORDER BY nhip_total DESC
     ";
     $stmt = $conn->prepare($query);
-    $stmt->bind_param("s", $selected_sheet);
+    $stmt->bind_param("si", $selected_sheet, $selected_file_id);
     $stmt->execute();
     $result = $stmt->get_result();
     while ($row = $result->fetch_assoc()) {
@@ -79,24 +93,37 @@ if ($selected_sheet) {
 <button class="toggle-btn" id="toggleBtn">Hide</button>
 
 <div class="table-responsive" id="content">
-<h2 class="text-center mb-4">Leading Causes Summary</h2>
+<h2 class="text-center mt-4" syle="margin-top:20px;">Leading Causes Summary</h2>
 
-<form method="GET" class="mb-4">
-<div class="sige">
-    <label>Select Sheet:</label>
-    <select name="sheet" class="form-select w-25 d-inline-block" onchange="this.form.submit()">
-        <option value="" disabled selected>Select Month</option>
-        <?php foreach ($sheets as $sheet): ?>
-            <option value="<?= $sheet ?>" <?= $sheet === $selected_sheet ? 'selected' : '' ?>>
-                <?= $sheet ?>
-            </option>
-        <?php endforeach; ?>
-    </select>
+<form method="GET" class="mb-4" id="filterForm">
+    <div class="sige">
+        <label for="file_id">Select File:</label>
+        <select name="file_id" id="file_id" onchange="document.getElementById('filterForm').submit()" class="form-select w-25 d-inline-block mb-2">
+            <option value="">-- Choose File --</option>
+            <?php foreach ($files as $file): ?>
+                <option value="<?= $file['id'] ?>" <?= $selected_file_id == $file['id'] ? 'selected' : '' ?>>
+                    <?= htmlspecialchars($file['file_name']) ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+
+        <?php if ($selected_file_id): ?>
+            <label for="sheet">Select Sheet:</label>
+            <select name="sheet" id="sheet" onchange="document.getElementById('filterForm').submit()" class="form-select w-25 d-inline-block mb-2">
+                <option value="" disabled selected>Select Month</option>
+                <?php foreach ($sheets as $sheet): ?>
+                    <option value="<?= $sheet ?>" <?= $sheet === $selected_sheet ? 'selected' : '' ?>>
+                        <?= $sheet ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        <?php endif; ?>
     </div>
 </form>
 
 <div class="table-responsive1" id="printable">
 <?php if ($selected_sheet): ?>
+    <div class="table-wrapper">
     <table class="table table-bordered">
         <thead class="table-dark text-center">
             <tr class="th1">
@@ -118,6 +145,7 @@ if ($selected_sheet) {
             <?php endforeach; ?>
         </tbody>
     </table>
+    </div>
 <?php else: ?>
     <p class="text-muted">Please select a month to view ICD-10 summary.</p>
 <?php endif; ?>
