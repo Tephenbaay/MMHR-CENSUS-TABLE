@@ -17,14 +17,12 @@ $sheets_2 = [];
 if (isset($_GET['file_id'])) {
     $file_id = $_GET['file_id'];
 
-    // Fetch sheets from patient_records
     $query1 = "SELECT DISTINCT sheet_name FROM patient_records WHERE file_id = $file_id";
     $result1 = $conn->query($query1);
     while ($row = $result1->fetch_assoc()) {
         $sheets[] = $row['sheet_name'];
     }
 
-    // Fetch admission sheets from patient_records_2
     $query2 = "SELECT DISTINCT sheet_name_2 FROM patient_records_2 WHERE file_id = $file_id AND sheet_name_2 LIKE 'admission(%)'";
     $result2 = $conn->query($query2);
     while ($row = $result2->fetch_assoc()) {

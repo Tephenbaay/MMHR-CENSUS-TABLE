@@ -1,7 +1,6 @@
 body{
-    margin-left: 270px;
     background-color: rgb(255, 255, 255);
-    font-family: 'Times New Roman', Times, serif;
+    
 }
 
 .sidebar {
@@ -9,7 +8,7 @@ body{
     margin-left: -15%;
     width: 240px;
     height: 44vh;
-    background-color: #5ee470;
+    background-color: #77b967;
     color: white;
     padding: 20px;
     position: fixed;
@@ -48,7 +47,7 @@ body{
 .navbar {
     width: 100%;
     height: 80px;
-    background-color: #6ba172;
+    background-color: #77b967;
     color: white;
     padding: 10px 20px;
     text-align: center;
@@ -210,6 +209,7 @@ label{
     justify-content: space-evenly;
     margin: auto;
     width: 70%;
+    box-shadow: #000000 0px 0px 5px;
 }
 
 tbody, thead{
@@ -225,6 +225,7 @@ tbody, thead{
     font-family: 'Times New Roman', Times, serif;
     font-weight: bold;
     color: black;
+    box-shadow: #000000 0px 0px 5px;
 }
 
 .btn1:hover, .btn-success:hover, .toggle-btn:hover{
@@ -236,6 +237,7 @@ tbody, thead{
 
 .btn-2{ 
     background-color: #D6A402;
+    box-shadow: #000000 0px 0px 5px;
 }
 .btn-2:hover{
     background-color: #B18601;
@@ -246,6 +248,7 @@ tbody, thead{
 
 .btn-3{ 
     background-color: #4949FF;
+    box-shadow: #000000 0px 0px 5px;
 }
 .btn-3:hover{
     background-color: #1F1FFF;

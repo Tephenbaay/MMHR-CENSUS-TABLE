@@ -1,19 +1,30 @@
+
 <?php
 require 'vendor/autoload.php';
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
-
 ini_set('max_execution_time', 300);
+include 'config.php';
 
-$host = "localhost";
-$user = "root";
-$pass = "";
-$dbname = "mmhr_census";
+$result = $conn->query("SELECT max_upload_files, max_file_size_mb, allowed_file_extensions FROM settings WHERE id = 1");
+$settings = $result->fetch_assoc();
 
-$conn = new mysqli($host, $user, $pass, $dbname);
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
+$maxFilesAllowed = (int)($settings['max_upload_files']);
+$maxFileSizeMB = (int)($settings['max_file_size_mb']);
+$allowedExtensions = explode(',', $settings['allowed_file_extensions'] ?? 'xlsx,xls');
+$maxFileSize = $maxFileSizeMB * 1024 * 1024;
+
+if ($_FILES['excelFile']['size'] > $maxFileSize) {
+    die("File too large. Max: {$maxFileSizeMB}MB");
 }
+
+$ext = strtolower(pathinfo($_FILES['excelFile']['name'], PATHINFO_EXTENSION));
+if (!in_array($ext, $allowedExtensions)) {
+    die("Invalid file extension. Allowed: " . implode(', ', $allowedExtensions));
+}
+
+$result = $conn->query("SELECT COUNT(*) AS total FROM uploaded_files");
+$row = $result->fetch_assoc();
 
 function convertExcelDate($value) {
     if (is_numeric($value)) {
@@ -33,6 +44,17 @@ function convertExcelDate($value) {
 if (isset($_FILES['excelFile'])) {
     $fileName = $_FILES['excelFile']['name'];
     $fileTmp = $_FILES['excelFile']['tmp_name'];
+    $fileSize = $_FILES['excelFile']['size'];
+
+    $result = $conn->query("SELECT COUNT(*) as total FROM uploaded_files");
+    $data = $result->fetch_assoc();
+    if ($data['total'] >= $maxFilesAllowed) {
+        die("<h3 style='color:red;'>❌ Upload limit reached. Only $maxFilesAllowed files allowed.</h3><p><a href='dashboard.php'>Go back</a></p>");
+    }
+
+    if ($fileSize > $maxFileSize) {
+        die("<h3 style='color:red;'>❌ File too large. Maximum allowed is 5MB.</h3><p><a href='dashboard.php'>Go back</a></p>");
+    }
 
     $stmt = $conn->prepare("INSERT INTO uploaded_files (file_name) VALUES (?)");
     $stmt->bind_param("s", $fileName);
@@ -51,12 +73,13 @@ if (isset($_FILES['excelFile'])) {
         $normalizedSheetName = strtoupper(trim($sheetName));
 
         if (preg_match('/^(JANUARY|FEBRUARY|MARCH|APRIL|MAY|JUNE|JULY|AUGUST|SEPTEMBER|OCTOBER|NOVEMBER|DECEMBER)$/', $normalizedSheetName)) {
-            $startRow = 3;
+            $startRow = 2;
             $colPatientName = "F"; 
             $colAdmissionDate = "C"; 
             $colDischargeDate = "D";
             $colMemberCategory = "L";
-            $colICD10 = "P"; 
+            $colICD10 = "P";
+            $colrvs_code = "R";
             $tableName = "patient_records";
         } elseif (stripos($sheetName, 'admission') !== false) {
             $startRow = 9;
@@ -78,8 +101,8 @@ if (isset($_FILES['excelFile'])) {
         for ($rowIndex = $startRow; $rowIndex <= $highestRow; $rowIndex++) {
             $patientName = trim($sheet->getCell("{$colPatientName}$rowIndex")->getValue());
             $admissionDate = convertExcelDate(trim($sheet->getCell("{$colAdmissionDate}$rowIndex")->getValue()));
-            $dischargeDate = convertExcelDate(trim($sheet->getCell("{$colDischargeDate}$rowIndex")->getValue()));
-            
+            $dischargeDate = isset($colDischargeDate) ? convertExcelDate(trim($sheet->getCell("{$colDischargeDate}$rowIndex")->getValue())) : null;
+
             if (empty($patientName) || empty($admissionDate)) {
                 continue;
             }
@@ -98,11 +121,13 @@ if (isset($_FILES['excelFile'])) {
             } else {
                 $memberCategory = trim($sheet->getCell("{$colMemberCategory}$rowIndex")->getValue());
                 $icd10 = trim($sheet->getCell("{$colICD10}$rowIndex")->getValue());
+                $rvs_code = trim($sheet->getCell("{$colrvs_code}$rowIndex")->getValue());
+                $rvs_escaped = mysqli_real_escape_string($conn, $rvs_code);
 
                 $batchData[] = "($fileId, '$sheetName', '$admissionDate', '$dischargeDate', '$memberCategory', '$patientName')";
 
                 if (!empty($icd10)) {
-                    $leadingCausesData[] = "($fileId, '$patientName', '$icd10', '$sheetName', '$memberCategory')";
+                    $leadingCausesData[] = "($fileId, '$patientName', '$icd10', '$sheetName', '$rvs_escaped')";
                 }
             }
 
@@ -118,8 +143,8 @@ if (isset($_FILES['excelFile'])) {
                 $batchData = [];
             }
 
-            if(count($leadingCausesData) >= 500) {
-                $query = "INSERT INTO leading_causes (file_id, patient_name, icd_10, sheet_name, category) VALUES " . implode(',', $leadingCausesData);
+            if (count($leadingCausesData) >= 500) {
+                $query = "INSERT INTO leading_causes (file_id, patient_name, icd_10, sheet_name, rvs_code) VALUES " . implode(',', $leadingCausesData);
             }
         }
 
@@ -135,16 +160,18 @@ if (isset($_FILES['excelFile'])) {
         }
 
         if (!empty($leadingCausesData)) {
-            $query = "INSERT INTO leading_causes (file_id, patient_name, icd_10, sheet_name, category) VALUES " . implode(',', $leadingCausesData);
+            $query = "INSERT INTO leading_causes (file_id, patient_name, icd_10, sheet_name, rvs_code) VALUES " . implode(',', $leadingCausesData);
             $conn->query($query);
         }
-        
     }
 
     echo "File uploaded and processed successfully!";
 } else {
     echo "No file uploaded.";
 }
+
+header("Location: dashboard.php?success=1");
+exit;
 
 $conn->close();
 ?>

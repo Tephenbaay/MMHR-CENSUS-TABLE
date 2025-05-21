@@ -5,8 +5,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = $_POST["username"];
     $email = $_POST["email"];
     $password = password_hash($_POST["password"], PASSWORD_BCRYPT);
-
-    // Check if email already exists
     $check_stmt = $conn->prepare("SELECT * FROM users WHERE email = ?");
     $check_stmt->bind_param("s", $email);
     $check_stmt->execute();
@@ -42,10 +40,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register</title>
-    <link rel="icon" href="templates/download-removebg-preview.png">
     <link rel="stylesheet" href="sige/register.css">
+    <link rel="icon" href="sige/download-removebg-preview.png" type="image/png">
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="d-flex justify-content-center align-items-center vh-100" style="background-image: url('sige/bgg.png'); background-size: cover; background-repeat: no-repeat;">
@@ -79,10 +76,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         </div>
     </form>
 </div>
-
-<!-- Bootstrap JS and dependencies -->
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
-
 </body>
 </html>

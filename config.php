@@ -1,8 +1,8 @@
 <?php
 $host = "localhost";
-$user = "root";  // Default XAMPP MySQL user
-$pass = "";  // Default password is empty
-$dbname = "mmhr_census";  // Your database name
+$user = "root";  
+$pass = "";  
+$dbname = "mmhr_census";  
 
 $conn = new mysqli($host, $user, $pass, $dbname);
 

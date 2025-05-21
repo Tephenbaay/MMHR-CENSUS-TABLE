@@ -1,79 +1,84 @@
 <?php
-session_start(); // Start session
+session_start(); 
 include 'config.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = $_POST["email"];
     $password = $_POST["password"];
 
-    $stmt = $conn->prepare("SELECT id, username, password FROM users WHERE email = ?");
+    $stmt = $conn->prepare("SELECT id, username, password, role FROM users WHERE email = ?");
     $stmt->bind_param("s", $email);
     $stmt->execute();
     $stmt->store_result();
     
     if ($stmt->num_rows > 0) {
-        $stmt->bind_result($id, $username, $hashed_password);
+        $stmt->bind_result($id, $username, $hashed_password, $db_role);
         $stmt->fetch();
 
         if (password_verify($password, $hashed_password)) {
-            $_SESSION["user_id"] = $id; // Store user session
+            $_SESSION["user_id"] = $id; 
             $_SESSION["username"] = $username;
-            header("Location: dashboard.php");
+            $_SESSION["role"] = $db_role;
+
+            if ($db_role === 'admin') {
+                header("Location: admin_dashboard.php");
+            } else {
+                header("Location: dashboard.php");
+            }
             exit;
         } else {
-            echo "<div class='alert alert-danger'>Invalid password.</div>";
+            echo "<div class='alert alert-danger' id='alert-box'>Invalid password.</div>";
         }
     } else {
-        echo "<div class='alert alert-danger'>No user found with that email.</div>";
+        echo "<div class='alert alert-danger' id='alert-box'>No user found with that email.</div>";
+
     }
     $stmt->close();
 }
+
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
-    <link rel="icon" href="templates/download-removebg-preview.png">
-    <link rel="stylesheet" href="sige/login.css">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="icon" href="css/download-removebg-preview.png" type="image/png">
+    <link rel="stylesheet" href="css/style.css">
 </head>
-<body class="d-flex justify-content-center align-items-center vh-100" style="background-image: url('sige/bgg.png'); background-size: cover; background-repeat: no-repeat;">
-
-<div class="p-10 rounded-lg shadow-md w-full sm:w-96" style="background-color: #afc9a2;">
-        <div class="flex items-center space-x-2">
-            <img src="sige/download-removebg-preview.png" alt="Uniwork Logo" class="h-20 w-20 object-contain">
-            <h2 class="text-2xl font-bold text-left text-stone-950 mb-1" style="font-family: 'Libre Baskerville', Georgia, serif;">Bicutan Medical Center, Inc.</h2>
-        </div>
-        <form method="POST" method="GET" class="space-y-6">
-            <div>
-                <label for="username" class="block text-sm text-black font-bold mt-8">Email:</label>
-                <input type="text" name="email" id="email" class="mt-3 p-1 block w-full border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+<body>
+    <div class="login-container">
+            <div class="logo-container">
+                <img src="css/download-removebg-preview.png" alt="Logo" class="logo">
+                <h2>BICUTAN MEDICAL CENTER INC.</h2>
             </div>
-            <div>
-                <label for="password" class="block text-sm text-black font-bold">Password:</label>
-                <input type="password" name="password" id="password" class="mt-3 p-1 block w-full border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-            </div>
+        <form method="POST" method="GET">
+            <label for="email">👨‍💻 Email:</label>
+            <input type="email" id="email" name="email" required placeholder="Enter your email">
 
-            <button type="submit" class="w-64 bg-blue-50 text-black font-bold content-center py-2 rounded-xl hover:bg-green-600 transition duration-300" style="margin-top: 10%; margin-left: 30px">Login</button>
+            <label for="password">🔑 Password:</label>
+            <input type="password" id="password" name="password" required placeholder="Enter your password">
 
-      
-        <p class="mt-3 text-center">
-            <span>No account? </span><a href="register.php" class="register-link">Register here</a>
-        </p>
+            <button type="submit">Login</button>
+        </form>
+        <br>
         <div class="footer">
             <small>&copy; Bicutan Medical Center Inc. All rights reserved.</small>
         </div>
     </div>
-    </form>
-    </div>
-    <!-- Bootstrap JS and dependencies -->
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
-
 </body>
+
+<script>
+    window.addEventListener("DOMContentLoaded", function () {
+        const alertBox = document.getElementById("alert-box");
+        if (alertBox) {
+            setTimeout(() => {
+                alertBox.style.transition = "opacity 0.5s ease";
+                alertBox.style.opacity = "0";
+                setTimeout(() => alertBox.remove(), 500);
+            }, 3000);
+        }
+    });
+</script>
+
 </html>
