@@ -369,11 +369,11 @@ $summary = array_fill(1, 31, [
     <div class="print-area">
         <div class="header-text">
             <div class="container">
-                <p>REPUBLIC OF THE PHILIPPINES</p>
-                <p>PHILIPPINE HEALTH INSURANCE CORPORATION</p>
-                <p>MANDATORY MONTHLY HOSPITAL REPORT</p>
-                <p>12/F City State Centre, 709 Shaw Blvd., Brgy. Oranbo, Pasig City</p>
-                <p>For the Month of JANUARY 2025</p>
+                <h3 style="text-align:center;">REPUBLIC OF THE PHILIPPINES <br>
+                PHILIPPINE HEALTH INSURANCE CORPORATION <br>
+                MANDATORY MONTHLY HOSPITAL REPORT <br>
+                12/F City State Centre, 709 Shaw Blvd., Brgy. Oranbo, Pasig City <br>
+                For the Month of <input type="text" class="month"></h3>
             </div>
         </div>
 
@@ -384,37 +384,37 @@ $summary = array_fill(1, 31, [
                 <div class="form-group row mb-3">
                     <label class="col-sm-5 col-form-label">Accreditation No. :</label>
                     <div class="col-sm-7">
-                        <input type="text" name="accreditation_no">
+                        <input type="text" name="accreditation_no" value="H92036364" disabled>
                     </div>
                 </div>
                 <div class="form-group row mb-3">
                     <label class="col-sm-5 col-form-label">Name of Hospital :</label>
                     <div class="col-sm-7">
-                        <input type="text" name="hospital_name">
+                        <input type="text" name="hospital_name" value="BICUTAN MEDICAL CENTER, INC." disabled>
                     </div>
                 </div>
                 <div class="form-group row mb-3">
                     <label class="col-sm-5 col-form-label">Address No./Street :</label>
                     <div class="col-sm-7">
-                        <input type="text" name="address">
+                        <input type="text" name="address" value="191 ML QUEZON ST., NEW LOWER BICUTAN" disabled>
                     </div>
                 </div>
                 <div class="form-group row mb-3">
                     <label class="col-sm-5 col-form-label">Municipality :</label>
                     <div class="col-sm-7">
-                        <input class="blank" type="text" name="municipality">
+                        <input class="blank" type="text" name="municipality" value=" TAGUIG" disabled>
                     </div>
                 </div>
                 <div class="form-group row mb-3">
                     <label class="col-sm-5 col-form-label">Province :</label>
                     <div class="col-sm-7">
-                        <input type="text" name="province">
+                        <input type="text" name="province" value="METRO MANILA" disabled>
                     </div>
                 </div>
                 <div class="form-group row mb-3">
                     <label class="col-sm-5 col-form-label">Zip Code :</label>
                     <div class="col-sm-7">
-                        <input type="text" name="zip_code">
+                        <input type="text" name="zip_code" value="1632" disabled>
                     </div>
                 </div>
             </div>
@@ -424,25 +424,25 @@ $summary = array_fill(1, 31, [
                 <div class="form-group row mb-3">
                     <label class="col-sm-5 col-form-label">Region :</label>
                     <div class="col-sm-7">
-                        <input type="text" name="region">
+                        <input type="text" name="region" value="NATIONAL CAPITAL REGION" disabled>
                     </div>
                 </div>
                 <div class="form-group row mb-3">
                     <label class="col-sm-5 col-form-label">Category :</label>
                     <div class="col-sm-7">
-                        <input type="text" name="category">
+                        <input type="text" name="category" value="LEVEL 2" disabled>
                     </div>
                 </div>
                 <div class="form-group row mb-3">
                     <label class="col-sm-5 col-form-label">PHIC Accredited Beds :</label>
                     <div class="col-sm-7">
-                        <input type="text" name="phic_beds">
+                        <input type="text" name="phic_beds" value="100" disabled>
                     </div>
                 </div>
                 <div class="form-group row mb-3">
                     <label class="col-sm-5 col-form-label">DOH Authorized Beds :</label>
                     <div class="col-sm-7">
-                        <input type="text" name="doh_beds">
+                        <input type="text" name="doh_beds" value="100" disabled>
                     </div>
                 </div>
             </div>
@@ -495,9 +495,9 @@ $summary = array_fill(1, 31, [
     <div class="table-container row">
           <!-- First Table -->
           <div class="col-md-6">
-            <p class="table-title">A. DAILY CENSUS OF NHIP PATIENTS</p>
-            <p class="subtitle">(EVERY 12:00MN.)</p>
-
+            <p class="table-title">A. DAILY CENSUS OF NHIP PATIENTS
+            (EVERY 12:00MN.)</p>
+                        <br>
             <center><table class="custom-table">
               <thead>
                 <tr>
@@ -589,7 +589,7 @@ $summary = array_fill(1, 31, [
 
     <div class="col-12 mt-5">
         <div class="indicator-section">
-          <h4><strong>B. QUALITY ASSURANCE INDICATOR</strong></h4>
+          <h3><strong>B. QUALITY ASSURANCE INDICATOR</strong></h3>
         <?php 
             $days_in_month_map = [
                 'JANUARY' => 31, 'FEBRUARY' => 28, 'MARCH' => 31,
@@ -652,7 +652,7 @@ $summary = array_fill(1, 31, [
 <div class="fixed-footer">
     <small>
         <span class="copyright-symbol">©</span>
-        <span class="full-text"> Bicutan Medical Center Inc. All rights reserved.</span>
+        <span class="full-text"> Baay, Stephen; Llagas, Jorge Michael S.</span>
     </small>
 </div>
 

@@ -169,7 +169,7 @@ if ($selected_file_id && $selected_sheet) {
                 </div>
             </div>
             <a href="user-manual.php" class="btrdy">User Manual</a>
-            <a href="#" class="logout-link" onclick="confirmLogout(event)">
+            <a href="javascript:void(0);" onclick="confirmLogout()">
                 <img src="css/power-off.png" alt="logout" class="logout-icon">
             </a>
         </div>
@@ -284,17 +284,40 @@ if ($selected_file_id && $selected_sheet) {
 <div class="fixed-footer">
     <small>
         <span class="copyright-symbol">©</span>
-        <span class="full-text"> Bicutan Medical Center Inc. All rights reserved.</span>
+        <span class="full-text"> Baay, Stephen; Llagas, Jorge Michael S.</span>
     </small>
 </div>
 
+<div id="overlayLogout" class="overlay-logout">
+  <div class="modal-logout">
+    <p><center>Are you sure you want to log out?</center></p>
+    <button onclick="logoutUser()">Yes, Logout</button>
+    <button onclick="closeLogoutModal()">Cancel</button>
+  </div>
+</div>
+
 <script>
-function confirmLogout(event) {
-    event.preventDefault(); // Prevent default link behavior
-    if (confirm("⚠️ Are you sure you want to logout?")) {
-        window.location.href = "logout.php"; // Proceed with logout
+
+        function confirmLogout(event) {
+        event.preventDefault(); 
+        if (confirm("⚠️ Are you sure you want to logout?")) {
+            window.location.href = "logout.php"; 
+        }
     }
-}
+
+    let logoutConfirmed = false;
+
+  function confirmLogout() {
+    document.getElementById("overlayLogout").style.display = "flex";
+  }
+
+  function closeLogoutModal() {
+    document.getElementById("overlayLogout").style.display = "none"; 
+  }
+
+  function logoutUser() {
+    window.location.href = 'logout.php'; 
+  }
 </script>
 
 <script>
@@ -631,12 +654,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
 
 <script>
-function confirmLogout(event) {
-    event.preventDefault(); // Prevent default link behavior
-    if (confirm("⚠️ Are you sure you want to logout?")) {
-        window.location.href = "logout.php"; // Proceed with logout
-    }
-}
 
 function toggleDropdown(event) {
     event.preventDefault();

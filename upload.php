@@ -119,7 +119,8 @@ if (isset($_FILES['excelFile'])) {
                 $memberCategory = $cell->getCalculatedValue(); 
                 $batchData[] = "($fileId, '$sheetName', '$admissionDate', '$patientName', '$memberCategory')";
             } else {
-                $memberCategory = trim($sheet->getCell("{$colMemberCategory}$rowIndex")->getValue());
+                $cell = $sheet->getCell("{$colMemberCategory}$rowIndex");
+                $memberCategory = $cell->getValue();
                 $icd10 = trim($sheet->getCell("{$colICD10}$rowIndex")->getValue());
                 $rvs_code = trim($sheet->getCell("{$colrvs_code}$rowIndex")->getValue());
                 $rvs_escaped = mysqli_real_escape_string($conn, $rvs_code);

@@ -281,7 +281,7 @@ $showSuccess = isset($_GET['success']) && $_GET['success'] == '1';
     <div class="fixed-footer">
         <small>
             <span class="copyright-symbol">©</span>
-            <span class="full-text"> Bicutan Medical Center Inc. All rights reserved.</span>
+            <span class="full-text"> Baay, Stephen; Llagas, Jorge Michael S.</span>
         </small>
     </div>
 

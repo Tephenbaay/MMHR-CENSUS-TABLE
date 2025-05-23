@@ -63,7 +63,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         </form>
         <br>
         <div class="footer">
-            <small>&copy; Bicutan Medical Center Inc. All rights reserved.</small>
+            <small>&copy; Baay, Stephen; Llagas, Jorge Michael S.</small>
         </div>
     </div>
 </body>
